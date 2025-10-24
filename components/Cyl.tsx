@@ -1,14 +1,16 @@
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { DoubleSide } from "three";
+import { DoubleSide, Mesh } from "three";
 
 const Cyl = () => {
     const tex = useTexture("/hero-img.webp");
-    const cyl = useRef(null);
+    const cyl = useRef<Mesh>(null);
     useFrame((state, delta) => {
-        cyl.current.rotation.y += delta;
-    })
+        if (cyl.current) {
+            cyl.current.rotation.y += delta;
+        }
+    });
 
     return (
         <group rotation={[0, 1.4, 0.2]}>
