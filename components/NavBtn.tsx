@@ -15,7 +15,7 @@ export default function PremiumRoundedScrollButton() {
 
   const state = useRef({ velocity: 0, direction: 1 });
 
-  const raf = useRef<number>();
+  const raf = useRef<number | null>(null);
 
   // Super smooth spring physics
   const amplitude = useRef(0);
