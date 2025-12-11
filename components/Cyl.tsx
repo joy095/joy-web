@@ -1,4 +1,4 @@
-import { useTexture } from "@react-three/drei";
+import { Html, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { DoubleSide, Mesh } from "three";
