@@ -16,7 +16,7 @@ export default function PremiumRoundedScrollButton() {
 
   // Spring physics
   const amplitude = useRef(0);
-  const DAMPING = 0.88;
+  const DAMPING = 0.5;
 
   // Base text wave (resting state)
   const baseTextWave = "M68,50 Q120,42 172,50";
@@ -24,7 +24,7 @@ export default function PremiumRoundedScrollButton() {
   // Clean initial rounded rectangle - maintains exact dimensions
   const initialShape = `
     M20,15
-    H195
+    H220
     a25,25 0 0 1 25,25
     V60
     a25,25 0 0 1 -25,25
@@ -166,7 +166,7 @@ export default function PremiumRoundedScrollButton() {
   return (
     <div
       ref={containerRef}
-      className="fixed right-8 top-1/2 -translate-y-1/2 z-50 pointer-events-none"
+      className="fixed right-3 top-2 z-50 pointer-events-none"
     >
       <div className="pointer-events-auto">
         <svg
