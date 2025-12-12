@@ -8,78 +8,102 @@ import { useGSAP } from "@gsap/react";
 export default function PremiumRoundedScrollButton() {
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<SVGPathElement>(null);
-  const topWaveRef = useRef<SVGPathElement>(null);
-  const bottomWaveRef = useRef<SVGPathElement>(null);
   const textWaveRef = useRef<SVGPathElement>(null);
   const textPathRef = useRef<SVGTextPathElement>(null);
 
   const state = useRef({ velocity: 0, direction: 1 });
-
   const raf = useRef<number | null>(null);
 
-  // Super smooth spring physics
+  // Spring physics
   const amplitude = useRef(0);
-  const SPRING = 0.2;
   const DAMPING = 0.88;
 
-  // Clean rounded rectangle base (like Figma border-radius: 32px)
-  const baseShape =
-    "M40,12 h160 a32,32 0 0 1 32,32 v32 a32,32 0 0 1 -32,32 h-160 a32,32 0 0 1 -32,-32 v-32 a32,32 0 0 1 32,-32 z";
+  // Base text wave (resting state)
+  const baseTextWave = "M68,50 Q120,42 172,50";
 
-  const baseTopWave = "M68,34 L172,34";
-  const baseBottomWave = "M68,66 L172,66";
-  const baseTextWave = "M68,28 Q120,20 172,28";
+  // Clean initial rounded rectangle - maintains exact dimensions
+  const initialShape = `
+    M20,15
+    H195
+    a25,25 0 0 1 25,25
+    V60
+    a25,25 0 0 1 -25,25
+    H20
+    a25,25 0 0 1 -25,-25
+    V40
+    a25,25 0 0 1 25,-25
+    Z
+  `;
 
-  const createPaths = (amp: number) => {
+  // Dynamic warped shape - maintains consistent height on all sides
+  const createBaseShape = (amp: number) => {
     const w = state.current.direction * amp;
+    const warpStrength = 2.0;
 
-    return {
-      top: `M68,34 Q120,${34 + w * 3.6} 172,34`,
-      bottom: `M68,66 Q120,${66 + w * 3.6} 172,66`,
-      text: `M68,28 Q120,${28 + w * 3} 172,28`,
-    };
+    const topMidY = 15 + w * warpStrength;
+    const bottomMidY = 85 + w * warpStrength;
+
+    return `
+    M20,15
+    Q120,${topMidY} 220,15
+    a25,25 0 0 1 25,25
+    V60
+    a25,25 0 0 1 -25,25
+    Q120,${bottomMidY} 20,85
+    a25,25 0 0 1 -25,-25
+    V40
+    a25,25 0 0 1 25,-25
+    Z
+  `
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
+  // Text wave deformation (same direction as original)
+  const createTextWave = (amp: number) => {
+    const w = state.current.direction * amp;
+    return `M68,50 Q120,${50 + w * 2.8} 172,50`;
   };
 
   const tick = () => {
-    // Spring physics for amplitude
     amplitude.current *= DAMPING;
     amplitude.current += state.current.velocity * 0.08;
 
-    const { top, bottom, text } = createPaths(Math.abs(amplitude.current));
+    const absAmp = Math.abs(amplitude.current);
 
-    gsap.set(topWaveRef.current, { attr: { d: top } });
-    gsap.set(bottomWaveRef.current, { attr: { d: bottom } });
-    gsap.set(textWaveRef.current, { attr: { d: text } });
+    gsap.set(buttonRef.current, { attr: { d: createBaseShape(absAmp) } });
+    gsap.set(textWaveRef.current, { attr: { d: createTextWave(absAmp) } });
 
-    // Subtle float + micro tilt
     gsap.set(containerRef.current, {
-      y: gsap.utils.clamp(-14, 14, state.current.velocity * 0.11),
-      rotate: gsap.utils.clamp(-0.6, 0.6, state.current.velocity * 0.0018),
+      y: gsap.utils.clamp(-12, 12, state.current.velocity * 0.1),
+      rotate: gsap.utils.clamp(-0.6, 0.6, state.current.velocity * 0.0015),
     });
 
-    if (
-      Math.abs(amplitude.current) > 0.5 ||
-      Math.abs(state.current.velocity) > 4
-    ) {
+    if (absAmp > 0.3 || Math.abs(state.current.velocity) > 2) {
       raf.current = requestAnimationFrame(tick);
     } else {
-      // Elegant reset
+      // Return to default state
+      gsap.to(buttonRef.current, {
+        attr: { d: initialShape },
+        duration: 1.5,
+        ease: "elastic.out(1.4, 0.3)",
+      });
+
+      gsap.to(textWaveRef.current, {
+        attr: { d: baseTextWave },
+        duration: 1.5,
+        ease: "elastic.out(1.4, 0.3)",
+      });
+
       gsap.to(containerRef.current, {
         y: 0,
         rotate: 0,
-        duration: 1.8,
-        ease: "elastic.out(1.6, 0.35)",
+        duration: 1.5,
+        ease: "elastic.out(1.4, 0.35)",
       });
-      gsap.to(
-        [topWaveRef.current, bottomWaveRef.current, textWaveRef.current],
-        {
-          attr: { d: [baseTopWave, baseBottomWave, baseTextWave] },
-          duration: 1.9,
-          ease: "elastic.out(1.js(1.5, 0.3)",
-          stagger: 0.04,
-        }
-      );
+
       amplitude.current = 0;
+      state.current.velocity = 0;
     }
   };
 
@@ -99,7 +123,7 @@ export default function PremiumRoundedScrollButton() {
 
       if (textPathRef.current) {
         textPathRef.current.textContent = delta > 0 ? "Keep Going" : "Going Up";
-        gsap.to(textPathRef.current, { opacity: 0.9, duration: 0.2 });
+        gsap.to(textPathRef.current, { opacity: 0.85, duration: 0.2 });
       }
 
       clearTimeout(timeout);
@@ -119,15 +143,15 @@ export default function PremiumRoundedScrollButton() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Beautiful entrance
+    // Entrance animation
     gsap.fromTo(
       containerRef.current,
-      { scale: 0.9, opacity: 0, filter: "blur(10px)" },
+      { scale: 0.88, opacity: 0, filter: "blur(12px)" },
       {
         scale: 1,
         opacity: 1,
         filter: "blur(0px)",
-        duration: 1.6,
+        duration: 1.8,
         ease: "expo.out",
       }
     );
@@ -147,42 +171,24 @@ export default function PremiumRoundedScrollButton() {
       <div className="pointer-events-auto">
         <svg
           width="240"
-          height="110"
+          height="100"
           viewBox="0 0 240 110"
           className="drop-shadow-2xl"
         >
-          {/* Clean rounded glass button */}
+          {/* Dynamic glass button */}
           <path
             ref={buttonRef}
-            d={baseShape}
+            d={initialShape}
             fill="rgba(255, 255, 255, 0.97)"
             stroke="rgba(180, 180, 255, 0.4)"
             strokeWidth="1.6"
             filter="url(#glassGlow)"
           />
 
-          {/* Flowing accent waves */}
-          <path
-            ref={topWaveRef}
-            d={baseTopWave}
-            stroke="url(#waveTop)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <path
-            ref={bottomWaveRef}
-            d={baseBottomWave}
-            stroke="url(#waveBottom)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
-
           {/* Text wave path */}
           <path ref={textWaveRef} id="textWave" d={baseTextWave} fill="none" />
 
-          {/* Premium glassmorphic effects */}
+          {/* Glass glow filter */}
           <defs>
             <filter id="glassGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="10" result="blur" />
@@ -194,33 +200,9 @@ export default function PremiumRoundedScrollButton() {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            <linearGradient id="waveTop">
-              <stop offset="0%" stopColor="#a78bfa">
-                <animate
-                  attributeName="stopColor"
-                  values="#a78bfa;#c084fc;#e0a8ff;#a78bfa"
-                  dur="4.5s"
-                  repeatCount="indefinite"
-                />
-              </stop>
-              <stop offset="100%" stopColor="#60a5fa" />
-            </linearGradient>
-
-            <linearGradient id="waveBottom">
-              <stop offset="0%" stopColor="#f87171" />
-              <stop offset="100%" stopColor="#fb923c">
-                <animate
-                  attributeName="stopColor"
-                  values="#fb923c;#fdba74;#fb923c"
-                  dur="5s"
-                  repeatCount="indefinite"
-                />
-              </stop>
-            </linearGradient>
           </defs>
 
-          {/* Crisp modern text */}
+          {/* Text */}
           <Link href="/works" className="block">
             <text
               fontSize="18"
