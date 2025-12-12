@@ -19,39 +19,39 @@ export default function PremiumRoundedScrollButton() {
   const DAMPING = 0.5;
 
   // Base text wave (resting state)
-  const baseTextWave = "M68,50 Q120,42 172,50";
+  const baseTextWave = "M68,60 Q120,52 172,60";
 
-  // Clean initial rounded rectangle - maintains exact dimensions
+  // Clean initial rounded rectangle
   const initialShape = `
-    M20,15
+    M20,25
     H220
     a25,25 0 0 1 25,25
-    V60
+    V70
     a25,25 0 0 1 -25,25
     H20
     a25,25 0 0 1 -25,-25
-    V40
+    V50
     a25,25 0 0 1 25,-25
     Z
   `;
 
-  // Dynamic warped shape - maintains consistent height on all sides
+  // Dynamic warped shape - consistent height, more padding room
   const createBaseShape = (amp: number) => {
     const w = state.current.direction * amp;
-    const warpStrength = 2.0;
+    const warpStrength = 1.6; // Reduced for controlled deformation
 
-    const topMidY = 15 + w * warpStrength;
-    const bottomMidY = 85 + w * warpStrength;
+    const topMidY = 25 + w * warpStrength;
+    const bottomMidY = 95 + w * warpStrength;
 
     return `
-    M20,15
-    Q120,${topMidY} 220,15
+    M20,25
+    Q120,${topMidY} 220,25
     a25,25 0 0 1 25,25
-    V60
+    V70
     a25,25 0 0 1 -25,25
-    Q120,${bottomMidY} 20,85
+    Q120,${bottomMidY} 20,95
     a25,25 0 0 1 -25,-25
-    V40
+    V50
     a25,25 0 0 1 25,-25
     Z
   `
@@ -59,10 +59,10 @@ export default function PremiumRoundedScrollButton() {
       .trim();
   };
 
-  // Text wave deformation (same direction as original)
+  // Text wave deformation
   const createTextWave = (amp: number) => {
     const w = state.current.direction * amp;
-    return `M68,50 Q120,${50 + w * 2.8} 172,50`;
+    return `M68,60 Q120,${60 + w * 2.5} 172,60`;
   };
 
   const tick = () => {
@@ -172,7 +172,7 @@ export default function PremiumRoundedScrollButton() {
         <svg
           width="240"
           height="100"
-          viewBox="0 0 240 110"
+          viewBox="0 0 240 140"
           className="drop-shadow-2xl"
         >
           {/* Dynamic glass button */}
